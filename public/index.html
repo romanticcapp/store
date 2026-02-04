@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>Tech Store</title>
+
+<style>
+
+body{
+margin:0;
+font-family:system-ui;
+background:linear-gradient(135deg,#02140a,#06361d);
+color:white;
+}
+
+nav{
+display:flex;
+justify-content:space-between;
+padding:20px;
+background:#00ff8844;
+backdrop-filter:blur(10px);
+}
+
+.logo{
+color:#00ff88;
+font-size:22px;
+font-weight:bold;
+}
+
+.container{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+gap:25px;
+padding:30px;
+}
+
+.card{
+background:#0b2d1a;
+border-radius:18px;
+padding:15px;
+transition:.3s;
+}
+
+.card:hover{
+transform:translateY(-10px);
+box-shadow:0 0 20px #00ff88;
+}
+
+img{
+width:100%;
+border-radius:12px;
+}
+
+button{
+width:100%;
+padding:10px;
+border:none;
+border-radius:10px;
+background:#00ff88;
+cursor:pointer;
+margin-top:8px;
+font-weight:bold;
+}
+
+.cartBox{
+position:fixed;
+right:-350px;
+top:0;
+width:300px;
+height:100%;
+background:#041b10;
+padding:20px;
+transition:.4s;
+overflow:auto;
+}
+
+.showCart{
+right:0;
+}
+
+</style>
+</head>
+<body>
+
+<nav>
+
+<div class="logo">🔥 Tech Store</div>
+
+<button onclick="toggleCart()">🛒</button>
+
+</nav>
+
+<div class="container" id="products"></div>
+
+<div class="cartBox" id="cart"></div>
+
+<script>
+
+let cart=[];
+
+fetch("/api/products")
+.then(r=>r.json())
+.then(data=>{
+
+data.forEach(p=>{
+
+products.innerHTML+=`
+
+<div class="card">
+
+<img src="${p.images[0]}">
+
+<h3>${p.name}</h3>
+
+<b>${p.price} جنيه</b>
+
+<button onclick='addToCart(${JSON.stringify(p)})'>
+اضف للسلة
+</button>
+
+<button onclick='buyNow(${JSON.stringify(p)})'>
+شراء الآن
+</button>
+
+</div>
+`;
+
+});
+
+});
+
+
+function addToCart(p){
+cart.push(p);
+renderCart();
+}
+
+function toggleCart(){
+cart.classList.toggle("showCart");
+}
+
+function renderCart(){
+
+const box=document.getElementById("cart");
+
+box.innerHTML="<h2>السلة</h2>";
+
+cart.forEach(p=>{
+box.innerHTML+=`<p>${p.name} - ${p.price}</p>`;
+});
+
+}
+
+
+function buyNow(product){
+
+const name=prompt("اسمك");
+const phone=prompt("رقمك");
+const address=prompt("عنوانك");
+
+fetch("/api/orders",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+product,
+name,
+phone,
+address
+})
+});
+
+alert("تم ارسال الطلب 🔥");
+
+}
+
+</script>
+</body>
+</html>
