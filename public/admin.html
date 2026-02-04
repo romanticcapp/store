@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>Admin</title>
+<style>
+body{font-family:system-ui;padding:30px}
+input,textarea{display:block;margin:8px 0;padding:10px;width:300px}
+button{padding:10px}
+.product{border:1px solid #ddd;padding:10px;margin:10px 0}
+</style>
+</head>
+<body>
+
+<h2>لوحة التحكم</h2>
+
+<div id="login">
+<input id="code" placeholder="رمز الدخول">
+<button onclick="login()">دخول</button>
+</div>
+
+<div id="panel" style="display:none">
+
+<h3>📢 إضافة منتج</h3>
+
+<input id="name" placeholder="اسم المنتج">
+<input id="price" placeholder="السعر">
+<input id="discount" placeholder="خصم %">
+<input id="stock" placeholder="عدد القطع">
+<textarea id="details" placeholder="تفاصيل"></textarea>
+<input type="file" id="images" multiple accept="image/*">
+
+<button onclick="addProduct()">رفع المنتج</button>
+
+<h3>📦 المنتجات</h3>
+<div id="products"></div>
+
+<h3>🧾 الطلبات</h3>
+<div id="orders"></div>
+
+</div>
+
+<script>
+
+function login(){
+fetch('/admin-login',{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({code:code.value})
+})
+.then(r=>r.json())
+.then(d=>{
+if(d.success){
+login.style.display='none';
+panel.style.display='block';
+load();
+}else alert('رمز غلط');
+});
+}
+
+async function addProduct(){
+const files = images.files;
+
+if(files.length>8)
+return alert("الحد الاقصى 8 صور");
+
+const imgs=[];
+
+for(let file of files){
+const base64 = await toBase64(file);
+imgs.push(base64);
+}
+
+fetch('/api/products',{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({
+name:name.value,
+price:+price.value,
+discount:+discount.value,
+stock:+stock.value,
+details:details.value,
+images:imgs
+})
+}).then(()=>load());
+}
+
+function toBase64(file){
+return new Promise(res=>{
+const reader=new FileReader();
+reader.readAsDataURL(file);
+reader.onload=()=>res(reader.result);
+});
+}
+
+function load(){
+fetch('/api/products')
+.then(r=>r.json())
+.then(data=>{
+products.innerHTML='';
+data.forEach(p=>{
+products.innerHTML+=`
+<div class='product'>
+<b>${p.name}</b>
+<button onclick="deleteProduct(${p.id})">مسح</button>
+</div>`;
+});
+});
+
+fetch('/api/orders')
+.then(r=>r.json())
+.then(data=>{
+orders.innerHTML='';
+data.forEach(o=>{
+orders.innerHTML+=`
+<div class='product'>
+${o.customer} - ${o.phone}<br>
+${o.address}
+</div>`;
+});
+});
+}
+
+function deleteProduct(id){
+fetch('/api/products/'+id,{method:'DELETE'})
+.then(()=>load());
+}
+
+</script>
+
+</body>
+</html>
