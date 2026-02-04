@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>Admin</title>
+
+<style>
+
+body{
+font-family:system-ui;
+background:#02140a;
+color:white;
+padding:20px;
+}
+
+input,textarea{
+display:block;
+margin:10px 0;
+padding:10px;
+border-radius:10px;
+border:none;
+width:250px;
+}
+
+button{
+padding:10px;
+border:none;
+border-radius:10px;
+background:#00ff88;
+cursor:pointer;
+}
+
+.card{
+background:#06361d;
+padding:10px;
+margin:10px 0;
+border-radius:10px;
+}
+
+</style>
+</head>
+<body>
+
+<h2>🔐 Admin</h2>
+
+<input id="code" placeholder="الكود">
+<button onclick="login()">دخول</button>
+
+<div id="panel" style="display:none">
+
+<h2>اضافة منتج</h2>
+
+<input id="name" placeholder="اسم">
+<input id="price" placeholder="سعر">
+<textarea id="desc" placeholder="تفاصيل"></textarea>
+<input type="file" id="images" multiple>
+
+<button onclick="addProduct()">اضافة</button>
+
+<h2>المنتجات</h2>
+<div id="products"></div>
+
+<h2>الطلبات</h2>
+<div id="orders"></div>
+
+</div>
+
+<script>
+
+function login(){
+
+fetch("/admin-login",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({code:code.value})
+})
+.then(r=>r.json())
+.then(d=>{
+
+if(d.success){
+panel.style.display="block";
+loadProducts();
+loadOrders();
+}else{
+alert("الكود غلط");
+}
+
+});
+
+}
+
+
+// 🔥 تحويل الصور Base64
+function toBase64(file){
+return new Promise(res=>{
+const reader=new FileReader();
+reader.readAsDataURL(file);
+reader.onload=()=>res(reader.result);
+});
+}
+
+
+async function addProduct(){
+
+let imgs=[];
+
+for(let file of images.files){
+imgs.push(await toBase64(file));
+}
+
+fetch("/api/products",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+
+name:name.value,
+price:price.value,
+description:desc.value,
+images:imgs
+
+})
+})
+.then(()=>loadProducts());
+
+}
+
+
+function loadProducts(){
+
+fetch("/api/products")
+.then(r=>r.json())
+.then(data=>{
+
+products.innerHTML="";
+
+data.forEach(p=>{
+
+products.innerHTML+=`
+<div class="card">
+
+<img src="${p.images[0]}" width="60">
+
+${p.name}
+
+<button onclick="deleteProduct(${p.id})">
+حذف
+</button>
+
+</div>
+`;
+
+});
+
+});
+
+}
+
+
+function deleteProduct(id){
+
+fetch("/api/products/"+id,{
+method:"DELETE"
+})
+.then(()=>loadProducts());
+
+}
+
+
+
+function loadOrders(){
+
+fetch("/api/orders")
+.then(r=>r.json())
+.then(data=>{
+
+orders.innerHTML="";
+
+data.forEach(o=>{
+
+orders.innerHTML+=`
+<div class="card">
+
+<b>${o.name}</b>
+<br>
+${o.phone}
+<br>
+${o.address}
+
+</div>
+`;
+
+});
+
+});
+
+}
+
+</script>
+</body>
+</html>
