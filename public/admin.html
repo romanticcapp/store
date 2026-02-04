@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>لوحة التحكم</title>
+</head>
+<body>
+<h2>لوحة التحكم</h2>
+<input id="name" placeholder="اسم المنتج">
+<input id="price" placeholder="السعر">
+<button onclick="addProduct()">أضف المنتج</button>
+<script>
+function addProduct() {
+  fetch('/api/products', {
+    method: 'POST',
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      name: document.getElementById('name').value,
+      price: document.getElementById('price').value
+    })
+  }).then(()=> location.reload());
+}
+</script>
+</body>
+</html>
