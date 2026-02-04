@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>متجري</title>
+</head>
+<body>
+<h1>🛒 المتجر</h1>
+<div id="products"></div>
+<script>
+fetch('/api/products')
+  .then(res => res.json())
+  .then(data => {
+    let html = '';
+    data.forEach(p => {
+      html += `<div><h3>${p.name}</h3><p>${p.price}</p></div>`;
+    });
+    document.getElementById('products').innerHTML = html;
+  });
+</script>
+</body>
+</html>
